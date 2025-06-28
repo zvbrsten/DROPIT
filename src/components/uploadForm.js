@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { QRCodeCanvas } from "qrcode.react";
+import QRCode from "qrcode.react"; // use QRCode instead of QRCodeCanvas for broader compatibility
 
 const UploadForm = () => {
   const [file, setFile] = useState(null);
   const [code, setCode] = useState("");
-  const [qrCode, setQrCode] = useState("");
   const [downloadURL, setDownloadURL] = useState("");
   const [progress, setProgress] = useState(0);
 
@@ -17,17 +16,19 @@ const UploadForm = () => {
     formData.append("file", file);
 
     try {
-      setProgress(0); // Reset before upload
+      setProgress(0);
+
       const res = await axios.post("https://dropit-backend-three.vercel.app/api/upload", formData, {
         onUploadProgress: (progressEvent) => {
           const { loaded, total } = progressEvent;
-          const percent = Math.floor((loaded * 100) / total);
-          setProgress(percent);
+          if (total) {
+            const percent = Math.floor((loaded * 100) / total);
+            setProgress(percent);
+          }
         },
       });
 
       setCode(res.data.code);
-      setQrCode(res.data.qrCode);
       setDownloadURL(res.data.downloadURL);
     } catch (err) {
       alert("Upload failed");
@@ -61,7 +62,7 @@ const UploadForm = () => {
       {code && (
         <div className="qr-code" style={{ marginTop: "20px" }}>
           <h4>Code: <code>{code}</code></h4>
-          <QRCodeCanvas value={downloadURL} size={150} />
+          <QRCode value={downloadURL} size={150} />
           <p>You can scan this QR on another device to download.</p>
         </div>
       )}
