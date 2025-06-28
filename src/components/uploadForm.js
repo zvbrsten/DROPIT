@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import QRCode from "qrcode.react"; // use QRCode instead of QRCodeCanvas for broader compatibility
+import QRCode from "qrcode.react";
 
 const UploadForm = () => {
   const [file, setFile] = useState(null);
@@ -18,21 +18,21 @@ const UploadForm = () => {
     try {
       setProgress(0);
 
-      const res = await axios.post("https://dropit-backend-three.vercel.app/api/upload", formData, {
-        onUploadProgress: (progressEvent) => {
-          const { loaded, total } = progressEvent;
-          if (total) {
-            const percent = Math.floor((loaded * 100) / total);
-            setProgress(percent);
-          }
+      const res = await axios({
+        method: "post",
+        url: "https://dropit-backend-three.vercel.app/api/upload",
+        data: formData,
+        onUploadProgress: function (progressEvent) {
+          const percent = Math.floor((progressEvent.loaded * 100) / progressEvent.total);
+          setProgress(percent);
         },
       });
 
       setCode(res.data.code);
       setDownloadURL(res.data.downloadURL);
     } catch (err) {
-      alert("Upload failed");
       console.error(err);
+      alert("Upload failed");
     }
   };
 
@@ -44,26 +44,25 @@ const UploadForm = () => {
         <button type="submit">Upload</button>
       </form>
 
-      {progress > 0 && progress < 100 && (
-        <div style={{ marginTop: "10px", width: "100%", backgroundColor: "#f1f1f1", borderRadius: "4px" }}>
+      {progress > 0 && (
+        <div style={{ marginTop: "10px", width: "100%", backgroundColor: "#f1f1f1" }}>
           <div
             style={{
               width: `${progress}%`,
               height: "10px",
               backgroundColor: "#4caf50",
-              borderRadius: "4px",
               transition: "width 0.2s",
             }}
           ></div>
-          <p style={{ fontSize: "12px" }}>{progress}%</p>
+          <p>{progress}%</p>
         </div>
       )}
 
       {code && (
-        <div className="qr-code" style={{ marginTop: "20px" }}>
+        <div style={{ marginTop: "20px" }}>
           <h4>Code: <code>{code}</code></h4>
           <QRCode value={downloadURL} size={150} />
-          <p>You can scan this QR on another device to download.</p>
+          <p>Scan this QR on another device to download.</p>
         </div>
       )}
     </div>
