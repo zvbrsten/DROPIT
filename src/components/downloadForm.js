@@ -12,7 +12,7 @@ const DownloadForm = () => {
     if (!code) return;
 
     try {
-      const res = await axios.get(`http://localhost:8000/api/file/${code}`, {
+      const res = await axios.get(`https://dropit-backend-three.vercel.app/api/file/${code}`, {
         onDownloadProgress: (progressEvent) => {
           const { loaded, total } = progressEvent;
           const percent = Math.floor((loaded * 100) / total);
