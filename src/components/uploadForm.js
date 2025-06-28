@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";  // ✅ Corrected import
 
 const UploadForm = () => {
   const [file, setFile] = useState(null);
@@ -61,7 +61,7 @@ const UploadForm = () => {
       {code && (
         <div style={{ marginTop: "20px" }}>
           <h4>Code: <code>{code}</code></h4>
-          <QRCode value={downloadURL} size={150} />
+          <QRCodeCanvas value={downloadURL} size={150} /> {/* ✅ Corrected usage */}
           <p>Scan this QR on another device to download.</p>
         </div>
       )}
