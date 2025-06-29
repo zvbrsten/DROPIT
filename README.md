@@ -3,11 +3,8 @@
 **DropIt** is a secure, cross-device file-sharing platform built using the **MERN stack** and **AWS S3**, allowing users to upload and retrieve files (≤50MB) using **6-digit codes** or **QR codes** — all without logging in.
 
 ---
-🌍 Live Demo
+🌍 Live Demo : https://dropit-sepia.vercel.app
 
-🖥️ Frontend: dropit-sepia.vercel.app
-
-🛠️ Backend: dropit-backend-three.vercel.app
 
 ## 🚀 Features
 
