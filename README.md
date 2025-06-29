@@ -1,70 +1,105 @@
-# Getting Started with Create React App
+# 📦 DropIt – Seamless Cross-Device File Transfer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**DropIt** is a secure, cross-device file-sharing platform built using the **MERN stack** and **AWS S3**, allowing users to upload and retrieve files (≤50MB) using **6-digit codes** or **QR codes** — all without logging in.
 
-## Available Scripts
+---
+🌍 Live Demo
 
-In the project directory, you can run:
+🖥️ Frontend: dropit-sepia.vercel.app
 
-### `npm start`
+🛠️ Backend: dropit-backend-three.vercel.app
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🚀 Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- 🔒 **Secure AWS S3 File Storage**
+- 🆔 **6-Digit Code & QR Code Access**
+- ⏳ **Auto-Expiring, One-Time Download Links**
+- 📉 **Real-Time Upload Progress Bar**
+- ⚙️ **No Login Required – Instant Sharing**
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📈 Performance Metrics
 
-### `npm run build`
+- **Upload Time**: ~2–5 seconds for files ≤50MB  
+- **Concurrent Uploads Supported**: ~100+ per day  
+- **Link Expiry**: Pre-signed URL expires after **first download or 5 minutes**  
+- **Download Time**: Instant, via signed AWS S3 URL  
+- **File Size Limit**: 50MB  
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🔐 Privacy & Security
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- ✅ **Pre-Signed S3 URLs**: Prevents unauthorized access after expiration or first download.
+- ✅ **No Persistent User Data**: No login, no cookies, no user profiles.
+- ✅ **Temporary File Storage**: Files are automatically deleted after expiry or first download.
+- ✅ **Backend Enforced Expiry**: Download attempts after expiration return HTTP 410 Gone.
 
-### `npm run eject`
+> 🔒 Your files are never stored permanently. Each transfer is isolated, and access is strictly time-bound.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🛠️ Tech Stack
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+| Frontend       | Backend         | Storage   | Other Tools         |
+|----------------|------------------|------------|----------------------|
+| React.js       | Node.js          | AWS S3     | Vercel (Hosting)     |
+| Tailwind CSS   | Express.js       |            | QRCode Generation    |
+| Axios          | MongoDB + Mongoose |         | dotenv, multer       |
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 🧪 How It Works
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 📤 Upload Flow
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. User selects a file (≤50MB).
+2. Backend:
+   - Uploads to S3 with a unique filename.
+   - Generates a **6-digit code**.
+   - Creates a **pre-signed download URL** (expires on use or timeout).
+   - Generates a **QR code** pointing to frontend download page.
+3. Response: `code`, `downloadURL`, and `qrCode`.
 
-### Code Splitting
+### 📥 Download Flow
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. User enters the 6-digit code or scans the QR.
+2. Backend:
+   - Validates code and expiry.
+   - Returns a signed S3 download URL.
+   - Marks file as downloaded and deletes the record later.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📂 Project Structure
 
-### Making a Progressive Web App
+    dropit/
+    ├── client/                      # React Frontend
+    │   ├── public/
+    │   │   └── index.html
+    │   ├── src/
+    │   │   ├── components/          # UploadForm.js, DownloadForm.js, etc.
+    │   │   ├── App.js
+    │   │   ├── index.js
+    │   │   └── styles.css           
+    │   └── package.json
+    │
+    ├── server/                      # Express Backend
+    │   ├── controllers/
+    │   │   └── fileController.js    # Handles upload/download logic
+    │   ├── models/
+    │   │   └── File.js              # Mongoose model for file metadata
+    │   ├── routes/
+    │   │   └── fileRoutes.js        # Upload/download API endpoints
+    │   ├── utils/
+    │   │   ├── generateCode.js      # 6-digit random code generator
+    │   │   └── s3Client.js          # AWS S3 client config
+    │   ├── .env                     # AWS keys, Mongo URI, expiry config
+    │   ├── index.js                 # Entry point of backend server
+    │   └── package.json
+    │
+    ├── README.md                    # Project documentation
+    └── .gitignore
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
