@@ -28,7 +28,7 @@ const DownloadForm = () => {
     setProgress(0);
 
     try {
-      const res = await axios.get(`http://localhost:8000/api/file/${code}`, {
+      const res = await axios.get(`https://dropit-sepia.vercel.app/api/file/${code}`, {
         onDownloadProgress: (progressEvent) => {
           const { loaded, total } = progressEvent;
           if (total) {
@@ -258,3 +258,4 @@ const DownloadForm = () => {
 };
 
 export default DownloadForm;
+
