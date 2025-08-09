@@ -209,4 +209,17 @@ const UploadForm = () => {
               }}>
                 <span>{file.filename}</span>
                 <span style={{ color: "#aaa" }}>{formatFileSize(file.size)}</span>
-             
+              </div>
+            ))}
+          </div>
+
+          <p style={{ marginTop: "15px", color: "#aaa", fontSize: "14px" }}>
+            All files will be available for download using this single code.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UploadForm;
