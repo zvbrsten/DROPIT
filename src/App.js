@@ -18,7 +18,16 @@ function App() {
   });
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto", color: "#fff", fontFamily: "sans-serif" }}>
+    <div style={{ 
+      padding: "20px", 
+      maxWidth: "900px", 
+      margin: "0 auto", 
+      color: "#fff", 
+      fontFamily: "sans-serif", 
+      background: "linear-gradient(270deg, #1e1e1e, #2d2d2d)", 
+      backgroundSize: "400% 400%", 
+      animation: "gradient 15s ease infinite" 
+    }}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "30px" }}>
         <h1 style={{ color: "#fff", marginBottom: "10px" }}>DropIt</h1>
@@ -28,15 +37,13 @@ function App() {
       </div>
 
       {/* Tab Navigation */}
-      <div
-        style={{
-          display: "flex",
-          marginBottom: "20px",
-          backgroundColor: "#1e1e1e",
-          borderRadius: "8px 8px 0 0",
-          overflow: "hidden",
-        }}
-      >
+      <div style={{
+        display: "flex",
+        marginBottom: "20px",
+        backgroundColor: "#1e1e1e",
+        borderRadius: "8px 8px 0 0",
+        overflow: "hidden",
+      }}>
         <button style={tabStyle("upload")} onClick={() => setActiveTab("upload")}>
           Upload Files
         </button>
@@ -46,30 +53,26 @@ function App() {
       </div>
 
       {/* Tab Content */}
-      <div
-        style={{
-          backgroundColor: "#1e1e1e",
-          padding: "20px",
-          borderRadius: "0 0 8px 8px",
-          minHeight: "400px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
-        }}
-      >
+      <div style={{
+        backgroundColor: "#1e1e1e",
+        padding: "20px",
+        borderRadius: "0 0 8px 8px",
+        minHeight: "400px",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+      }}>
         {activeTab === "upload" && <UploadForm />}
         {activeTab === "download" && <DownloadForm />}
       </div>
 
       {/* Footer */}
-      <div
-        style={{
-          textAlign: "center",
-          marginTop: "30px",
-          padding: "20px",
-          color: "#aaa",
-          fontSize: "14px",
-          borderTop: "1px solid #333",
-        }}
-      >
+      <div style={{
+        textAlign: "center",
+        marginTop: "30px",
+        padding: "20px",
+        color: "#aaa",
+        fontSize: "14px",
+        borderTop: "1px solid #333",
+      }}>
         <p>
           <strong>Individual Sharing:</strong> Upload multiple files and get a single code for easy sharing<br />
           <strong>Group Sharing:</strong> Create or join groups for collaborative file sharing
