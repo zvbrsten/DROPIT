@@ -67,17 +67,15 @@ const UploadForm = () => {
   const totalSize = files.reduce((sum, file) => sum + file.size, 0);
 
   return (
-    <div
-      style={{
-        backgroundColor: "#1e1e1e",
-        padding: "20px",
-        borderRadius: "10px",
-        maxWidth: "600px",
-        margin: "auto",
-        color: "#fff",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
-      }}
-    >
+    <div style={{
+      backgroundColor: "#1e1e1e",
+      padding: "20px",
+      borderRadius: "10px",
+      maxWidth: "600px",
+      margin: "auto",
+      color: "#fff",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+    }}>
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "15px", textAlign: "center" }}>
         Upload Files
       </h2>
@@ -100,26 +98,21 @@ const UploadForm = () => {
         />
 
         {files.length > 0 && (
-          <div
-            style={{
-              marginBottom: "15px",
-              padding: "10px",
-              backgroundColor: "#2d2d2d",
-              borderRadius: "5px",
-            }}
-          >
+          <div style={{
+            marginBottom: "15px",
+            padding: "10px",
+            backgroundColor: "#2d2d2d",
+            borderRadius: "5px",
+          }}>
             <h4>Selected Files ({files.length}):</h4>
             <div style={{ maxHeight: "200px", overflowY: "auto" }}>
               {files.map((file, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "5px 0",
-                    borderBottom: "1px solid #444",
-                  }}
-                >
+                <div key={index} style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "5px 0",
+                  borderBottom: "1px solid #444",
+                }}>
                   <span>{file.name}</span>
                   <span style={{ color: "#aaa", fontSize: "14px" }}>
                     {formatFileSize(file.size)}
@@ -153,28 +146,24 @@ const UploadForm = () => {
 
       {isUploading && (
         <div style={{ marginTop: "20px" }}>
-          <div
-            style={{
-              width: "100%",
-              backgroundColor: "#444",
+          <div style={{
+            width: "100%",
+            backgroundColor: "#444",
+            borderRadius: "4px",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              width: `${progress}%`,
+              height: "20px",
+              backgroundColor: "#4caf50",
               borderRadius: "4px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                width: `${progress}%`,
-                height: "20px",
-                backgroundColor: "#4caf50",
-                borderRadius: "4px",
-                transition: "width 0.2s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontWeight: "bold",
-              }}
-            >
+              transition: "width 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              fontWeight: "bold",
+            }}>
               {progress}%
             </div>
           </div>
@@ -182,26 +171,22 @@ const UploadForm = () => {
       )}
 
       {code && !isUploading && (
-        <div
-          style={{
-            marginTop: "30px",
-            textAlign: "center",
-            padding: "20px",
-            backgroundColor: "#2d2d2d",
-            borderRadius: "10px",
-          }}
-        >
+        <div style={{
+          marginTop: "30px",
+          textAlign: "center",
+          padding: "20px",
+          backgroundColor: "#2d2d2d",
+          borderRadius: "10px",
+        }}>
           <h3>Upload Successful</h3>
           <h4>
             Share Code:{" "}
-            <code
-              style={{
-                backgroundColor: "#444",
-                padding: "5px 10px",
-                borderRadius: "3px",
-                fontSize: "18px",
-              }}
-            >
+            <code style={{
+              backgroundColor: "#444",
+              padding: "5px 10px",
+              borderRadius: "3px",
+              fontSize: "18px",
+            }}>
               {code}
             </code>
           </h4>
@@ -214,30 +199,14 @@ const UploadForm = () => {
           <div style={{ textAlign: "left", marginTop: "20px" }}>
             <h4>Uploaded Files ({uploadedFiles.length}):</h4>
             {uploadedFiles.map((file, index) => (
-              <div
-                key={index}
-                style={{
-                  padding: "8px",
-                  backgroundColor: "#1e1e1e",
-                  margin: "5px 0",
-                  borderRadius: "5px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
+              <div key={index} style={{
+                padding: "8px",
+                backgroundColor: "#1e1e1e",
+                margin: "5px 0",
+                borderRadius: "5px",
+                display: "flex",
+                justifyContent: "space-between",
+              }}>
                 <span>{file.filename}</span>
                 <span style={{ color: "#aaa" }}>{formatFileSize(file.size)}</span>
-              </div>
-            ))}
-          </div>
-
-          <p style={{ marginTop: "15px", color: "#aaa", fontSize: "14px" }}>
-            All files will be available for download using this single code.
-          </p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default UploadForm;
+             
