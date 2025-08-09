@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-// Change this to your deployed backend if needed
 const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://dropit-backend-three.vercel.app";
 
 const formatFileSize = (bytes) => {
@@ -61,14 +60,6 @@ export default function DownloadForm() {
         throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
       }
 
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('xml')) {
-        const text = await response.text();
-        if (text.includes('<Error>')) {
-          throw new Error('Download link has expired. Please fetch files again.');
-        }
-      }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -93,148 +84,86 @@ export default function DownloadForm() {
     }
   };
 
-  // Basic styles (no external CSS frameworks required)
-  const styles = {
-    page: {
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg,#07112a 0%, #04263a 100%)',
-      padding: '24px',
-      boxSizing: 'border-box'
-    },
-    card: {
-      width: '100%',
-      maxWidth: '920px',
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderRadius: '14px',
-      padding: '20px',
-      color: '#e6eef8',
-      boxShadow: '0 10px 30px rgba(2,6,23,0.6)'
-    },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-    title: { margin: 0, fontSize: '22px', fontWeight: 800 },
-    subtitle: { margin: 0, fontSize: '13px', color: '#9fb3cf' },
-    formRow: { marginTop: '12px' },
-    input: {
-      width: '100%',
-      padding: '12px 14px',
-      borderRadius: '10px',
-      border: '1px solid rgba(255,255,255,0.08)',
-      background: 'rgba(255,255,255,0.02)',
-      color: '#e6eef8',
-      fontSize: '15px',
-      outline: 'none',
-      boxSizing: 'border-box'
-    },
-    primaryBtn: {
-      width: '100%',
-      padding: '12px 16px',
-      borderRadius: '10px',
-      border: 'none',
-      fontWeight: 700,
-      fontSize: '15px',
-      cursor: 'pointer',
-      marginTop: '10px',
-      background: 'linear-gradient(90deg,#5b8cff,#b36bff)',
-      color: 'white'
-    },
-    progressOuter: { marginTop: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', height: '10px', overflow: 'hidden' },
-    progressInner: (percent) => ({ height: '100%', width: `${percent}%`, transition: 'width 0.4s ease', background: 'linear-gradient(90deg,#27d39a,#06b6d4)' }),
-    fileCard: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginTop: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' },
-    fileName: { fontWeight: 600, color: '#ecf6ff' },
-    fileMeta: { fontSize: '13px', color: '#9fb3cf' },
-    dangerBox: { marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'rgba(128,0,0,0.18)', border: '1px solid rgba(255,100,100,0.08)', color: '#ffdada' },
-    noteBox: { marginTop: '12px', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)', color: '#cbe3ff', fontSize: '13px' }
-  };
-
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <div>
-            <h1 style={styles.title}>DropIt — Retrieve Files</h1>
-            <p style={styles.subtitle}>Enter a download code to fetch files. Links are short-lived.</p>
+    <div style={{
+      backgroundColor: "#1e1e1e",
+      padding: "20px",
+      borderRadius: "10px",
+      maxWidth: "600px",
+      margin: "auto",
+      color: "#fff",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+    }}>
+      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "15px", textAlign: "center" }}>
+        Retrieve Files
+      </h2>
+      <form onSubmit={handleDownload}>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          type="text"
+          placeholder="Enter download code"
+          required
+          style={{
+            width: "100%",
+            padding: "12px 14px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: 'rgba(255,255,255,0.02)',
+            color: '#e6eef8',
+            fontSize: '15px',
+            outline: 'none',
+            boxSizing: 'border-box'
+          }}
+        />
+        <button type="submit" disabled={isLoading} style={{
+          width: "100%",
+          padding: "12px 16px",
+          borderRadius: "10px",
+          border: "none",
+          fontWeight: 700,
+          fontSize: "15px",
+          cursor: "pointer",
+          marginTop: "10px",
+          background: isLoading ? "#555" : "#007bff",
+          color: "white"
+        }}>
+          {isLoading ? 'Fetching Files...' : 'Get Files'}
+        </button>
+      </form>
+
+      {isLoading && progress > 0 && (
+        <div style={{ marginTop: '12px' }}>
+          <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progress}%`, transition: 'width 0.4s ease', background: 'linear-gradient(90deg,#27d39a,#06b6d4)' }} />
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12px', padding: '6px 10px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,255,255,0.02)' }}>Secure</div>
+          <p style={{ textAlign: 'right', fontSize: '12px', color: '#9fb3cf', marginTop: '6px' }}>{progress}%</p>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'rgba(128,0,0,0.18)', border: '1px solid rgba(255,100,100,0.08)', color: '#ffdada' }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {files.length > 0 && (
+        <div style={{ marginTop: '18px' }}>
+          <h2 style={{ margin: 0, fontSize: '16px', color: '#ecf6ff' }}>Found {filesCount} File{filesCount !== 1 ? 's' : ''}</h2>
+          <p style={{ margin: '6px 0 0 0', color: '#9fb3cf', fontSize: '13px' }}>Total Size: {formatFileSize(totalSize)}</p>
+          <div style={{ marginTop: '12px' }}>
+            {files.map((file, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginTop: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#ecf6ff' }}>{file.filename}</div>
+                  <div style={{ fontSize: '13px', color: '#9fb3cf' }}>{formatFileSize(file.fileSize)} • {file.mimeType}</div>
+                </div>
+                <button onClick={() => downloadFile(file)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer' }}>Download</button>
+              </div>
+            ))}
           </div>
         </div>
-
-        <form onSubmit={handleDownload}>
-          <div style={styles.formRow}>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              type="text"
-              placeholder="Enter download code"
-              required
-              style={styles.input}
-            />
-          </div>
-
-          <button type="submit" disabled={isLoading} style={{ ...styles.primaryBtn, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'wait' : 'pointer' }}>
-            {isLoading ? 'Fetching Files...' : 'Get Files'}
-          </button>
-        </form>
-
-        {isLoading && progress > 0 && (
-          <div style={{ marginTop: '12px' }}>
-            <div style={styles.progressOuter}>
-              <div style={styles.progressInner(progress)} />
-            </div>
-            <p style={{ textAlign: 'right', fontSize: '12px', color: '#9fb3cf', marginTop: '6px' }}>{progress}%</p>
-          </div>
-        )}
-
-        {error && (
-          <div style={styles.dangerBox}>
-            <strong>Error:</strong> {error}
-            {error.toLowerCase().includes('expired') && (
-              <div style={{ marginTop: '8px', fontSize: '13px', color: '#ffdada' }}>The download links may have expired. Try fetching the files again.</div>
-            )}
-          </div>
-        )}
-
-        {files.length > 0 && (
-          <div style={{ marginTop: '18px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '16px', color: '#ecf6ff' }}>Found {filesCount} File{filesCount !== 1 ? 's' : ''}</h2>
-                <p style={{ margin: '6px 0 0 0', color: '#9fb3cf', fontSize: '13px' }}>Total Size: {formatFileSize(totalSize)}</p>
-              </div>
-
-              <div>
-                {files.length > 1 && (
-                  <button onClick={downloadAllFiles} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer' }}>Download All</button>
-                )}
-              </div>
-            </div>
-
-            <div style={{ marginTop: '12px' }}>
-              {files.map((file, idx) => (
-                <div key={idx} style={styles.fileCard}>
-                  <div>
-                    <div style={styles.fileName}>{file.filename}</div>
-                    <div style={styles.fileMeta}>{formatFileSize(file.fileSize)} • {file.mimeType}</div>
-                  </div>
-                  <div>
-                    <button onClick={() => downloadFile(file)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer' }}>Download</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={styles.noteBox}>
-              <strong>Note:</strong> Download links are generated fresh each time you fetch files. If a download fails due to expiration, re-fetch to get fresh signed URLs.
-            </div>
-          </div>
-        )}
-
-        <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '12px', color: '#9fb3cf' }}>Made with care — DropIt</div>
-      </div>
+      )}
     </div>
   );
 }
