@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { motion } from "framer-motion";
 
 // Change this to your deployed backend if needed
 const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://dropit-backend-three.vercel.app";
@@ -56,7 +55,6 @@ export default function DownloadForm() {
 
   const downloadFile = async (file) => {
     try {
-      // Try to fetch the file (browser will enforce CORS for presigned S3 URLs)
       const response = await fetch(file.downloadUrl);
 
       if (!response.ok) {
@@ -95,123 +93,147 @@ export default function DownloadForm() {
     }
   };
 
+  // Basic styles (no external CSS frameworks required)
+  const styles = {
+    page: {
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg,#07112a 0%, #04263a 100%)',
+      padding: '24px',
+      boxSizing: 'border-box'
+    },
+    card: {
+      width: '100%',
+      maxWidth: '920px',
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderRadius: '14px',
+      padding: '20px',
+      color: '#e6eef8',
+      boxShadow: '0 10px 30px rgba(2,6,23,0.6)'
+    },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
+    title: { margin: 0, fontSize: '22px', fontWeight: 800 },
+    subtitle: { margin: 0, fontSize: '13px', color: '#9fb3cf' },
+    formRow: { marginTop: '12px' },
+    input: {
+      width: '100%',
+      padding: '12px 14px',
+      borderRadius: '10px',
+      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'rgba(255,255,255,0.02)',
+      color: '#e6eef8',
+      fontSize: '15px',
+      outline: 'none',
+      boxSizing: 'border-box'
+    },
+    primaryBtn: {
+      width: '100%',
+      padding: '12px 16px',
+      borderRadius: '10px',
+      border: 'none',
+      fontWeight: 700,
+      fontSize: '15px',
+      cursor: 'pointer',
+      marginTop: '10px',
+      background: 'linear-gradient(90deg,#5b8cff,#b36bff)',
+      color: 'white'
+    },
+    progressOuter: { marginTop: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', height: '10px', overflow: 'hidden' },
+    progressInner: (percent) => ({ height: '100%', width: `${percent}%`, transition: 'width 0.4s ease', background: 'linear-gradient(90deg,#27d39a,#06b6d4)' }),
+    fileCard: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginTop: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' },
+    fileName: { fontWeight: 600, color: '#ecf6ff' },
+    fileMeta: { fontSize: '13px', color: '#9fb3cf' },
+    dangerBox: { marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'rgba(128,0,0,0.18)', border: '1px solid rgba(255,100,100,0.08)', color: '#ffdada' },
+    noteBox: { marginTop: '12px', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)', color: '#cbe3ff', fontSize: '13px' }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#001e3c] to-[#06202a] p-6">
-      <div className="w-full max-w-2xl bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <div style={styles.header}>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">✨ DropIt — Retrieve Files</h1>
-            <p className="text-sm text-slate-300/80 mt-1">Enter a download code to fetch files. Links are short-lived.</p>
+            <h1 style={styles.title}>DropIt — Retrieve Files</h1>
+            <p style={styles.subtitle}>Enter a download code to fetch files. Links are short-lived.</p>
           </div>
-          <div className="text-right">
-            <div className="inline-flex items-center gap-2 bg-white/6 px-3 py-1 rounded-full border border-white/8">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 3v4M8 3v4" />
-              </svg>
-              <span className="text-xs text-white/90">Secure</span>
-            </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '12px', padding: '6px 10px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,255,255,0.02)' }}>Secure</div>
           </div>
         </div>
 
-        <form onSubmit={handleDownload} className="space-y-4">
-          <div className="relative">
+        <form onSubmit={handleDownload}>
+          <div style={styles.formRow}>
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
               type="text"
               placeholder="Enter download code"
               required
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 placeholder:text-slate-400 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+              style={styles.input}
             />
-            <div className="absolute right-3 top-3 text-slate-300 text-xs">Code</div>
           </div>
 
-          <motion.button
-            type="submit"
-            whileTap={{ scale: 0.98 }}
-            className={`w-full inline-flex items-center justify-center gap-3 rounded-xl px-5 py-3 font-semibold shadow-md transition ${isLoading ? 'bg-slate-600 cursor-wait' : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:scale-[1.01]'}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 3v12" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7l4-4 4 4" />
-              </svg>
-            )}
-
-            <span className="text-white">{isLoading ? 'Fetching Files...' : 'Get Files'}</span>
-          </motion.button>
+          <button type="submit" disabled={isLoading} style={{ ...styles.primaryBtn, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'wait' : 'pointer' }}>
+            {isLoading ? 'Fetching Files...' : 'Get Files'}
+          </button>
         </form>
 
         {isLoading && progress > 0 && (
-          <div className="mt-4">
-            <div className="w-full bg-white/6 rounded-full h-2 overflow-hidden">
-              <motion.div
-                className="h-2 bg-gradient-to-r from-green-400 to-teal-400"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ ease: 'easeOut', duration: 0.6 }}
-              />
+          <div style={{ marginTop: '12px' }}>
+            <div style={styles.progressOuter}>
+              <div style={styles.progressInner(progress)} />
             </div>
-            <p className="text-xs text-slate-300 text-right mt-1">{progress}%</p>
+            <p style={{ textAlign: 'right', fontSize: '12px', color: '#9fb3cf', marginTop: '6px' }}>{progress}%</p>
           </div>
         )}
 
         {error && (
-          <div className="mt-4 p-3 rounded-lg bg-red-900/50 border border-red-700 text-red-100">
+          <div style={styles.dangerBox}>
             <strong>Error:</strong> {error}
             {error.toLowerCase().includes('expired') && (
-              <div className="mt-2 text-sm text-red-200 italic">The download links may have expired. Try fetching the files again.</div>
+              <div style={{ marginTop: '8px', fontSize: '13px', color: '#ffdada' }}>The download links may have expired. Try fetching the files again.</div>
             )}
           </div>
         )}
 
         {files.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-6 bg-gradient-to-b from-white/3 to-white/2 border border-white/6 rounded-2xl p-5">
-            <div className="flex items-start justify-between">
+          <div style={{ marginTop: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2 className="text-lg font-bold text-white">Found {filesCount} File{filesCount !== 1 ? 's' : ''}</h2>
-                <p className="text-sm text-slate-300 mt-1">Total Size: {formatFileSize(totalSize)}</p>
+                <h2 style={{ margin: 0, fontSize: '16px', color: '#ecf6ff' }}>Found {filesCount} File{filesCount !== 1 ? 's' : ''}</h2>
+                <p style={{ margin: '6px 0 0 0', color: '#9fb3cf', fontSize: '13px' }}>Total Size: {formatFileSize(totalSize)}</p>
               </div>
 
-              <div className="flex gap-3">
+              <div>
                 {files.length > 1 && (
-                  <button onClick={downloadAllFiles} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Download All</button>
+                  <button onClick={downloadAllFiles} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer' }}>Download All</button>
                 )}
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3">
+            <div style={{ marginTop: '12px' }}>
               {files.map((file, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-white/3 rounded-lg border border-white/6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-white/6 flex items-center justify-center text-white/90 font-semibold">{(file.filename || 'F').charAt(0).toUpperCase()}</div>
-                    <div>
-                      <div className="text-sm font-semibold text-white">{file.filename}</div>
-                      <div className="text-xs text-slate-300">{formatFileSize(file.fileSize)} • {file.mimeType}</div>
-                    </div>
+                <div key={idx} style={styles.fileCard}>
+                  <div>
+                    <div style={styles.fileName}>{file.filename}</div>
+                    <div style={styles.fileMeta}>{formatFileSize(file.fileSize)} • {file.mimeType}</div>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => downloadFile(file)} className="px-3 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-sm">Download</button>
+                  <div>
+                    <button onClick={() => downloadFile(file)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer' }}>Download</button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 p-3 rounded-lg bg-white/4 border border-white/6 text-xs text-slate-300">
+            <div style={styles.noteBox}>
               <strong>Note:</strong> Download links are generated fresh each time you fetch files. If a download fails due to expiration, re-fetch to get fresh signed URLs.
             </div>
-          </motion.div>
+          </div>
         )}
 
-        <div className="mt-6 text-center text-xs text-slate-500">Made with ❤️ — DropIt</div>
+        <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '12px', color: '#9fb3cf' }}>Made with care — DropIt</div>
       </div>
     </div>
   );
