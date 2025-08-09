@@ -8,6 +8,26 @@ body {
   padding: 0;
   line-height: 1.5;
 }
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background: linear-gradient(270deg, #1e1e1e, #2d2d2d);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
 
 h1 {
   text-align: center;
