@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import API_CONFIG from "../config/api";
-import { testBackendConnection, getBackendStatus } from "../utils/connectionTest";
 
 const DownloadForm = () => {
   const [code, setCode] = useState("");
@@ -12,16 +10,6 @@ const DownloadForm = () => {
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [backendStatus, setBackendStatus] = useState(null);
-
-  // Test backend connection on component mount
-  useEffect(() => {
-    const checkBackend = async () => {
-      const status = await testBackendConnection();
-      setBackendStatus(status);
-    };
-    checkBackend();
-  }, []);
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -41,8 +29,7 @@ const DownloadForm = () => {
     setProgress(0);
 
     try {
-      const res = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.FILE}/${code}`, {
-        timeout: API_CONFIG.TIMEOUT,
+      const res = await axios.get(`https://dropit-backend-three.vercel.app/api/file/${code}`, {
         onDownloadProgress: (progressEvent) => {
           const { loaded, total } = progressEvent;
           if (total) {
@@ -53,34 +40,12 @@ const DownloadForm = () => {
       });
       
       console.log("Download response:", res.data);
-      console.log("Files structure:", res.data.files);
-      if (res.data.files && res.data.files.length > 0) {
-        console.log("First file object:", res.data.files[0]);
-        console.log("Available fields:", Object.keys(res.data.files[0]));
-      }
       setFiles(res.data.files);
       setFilesCount(res.data.filesCount);
       setTotalSize(res.data.totalSize);
       setDownloadURL(res.data.downloadURL || "");
     } catch (err) {
-      let errorMessage = "An error occurred while fetching files";
-      
-      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        errorMessage = "Request timed out. The server may be unavailable. Please try again.";
-      } else if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
-        errorMessage = "Cannot connect to server. Please check your internet connection and try again.";
-      } else if (err.response?.status === 404) {
-        errorMessage = "Download code not found. Please check the code and try again.";
-      } else if (err.response?.status === 410) {
-        errorMessage = "Download link has expired. Please request a new code.";
-      } else if (err.response?.status === 500) {
-        errorMessage = "Server error. Please try again later.";
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
+      const errorMessage = err.response?.data?.error || "Invalid or expired code";
       setError(errorMessage);
       console.error("Download error:", err);
     } finally {
@@ -91,75 +56,22 @@ const DownloadForm = () => {
   const downloadFile = async (file) => {
     try {
       console.log("Downloading file:", file.filename);
-      console.log("File object:", file);
       
-      // For AWS S3 pre-signed URLs, we need to get a fresh download URL for this specific file
-      // The backend should provide individual download URLs for each file
-      let downloadUrl;
-      
-      // Check if the file has its own download URL
-      if (file.downloadUrl || file.url || file.signedUrl) {
-        downloadUrl = file.downloadUrl || file.url || file.signedUrl;
-        console.log("Using file-specific download URL:", downloadUrl);
-      } else if (downloadURL) {
-        // If there's a general download URL, we might need to append the file identifier
-        downloadUrl = downloadURL;
-        console.log("Using general download URL:", downloadUrl);
-      } else {
-        // Fallback: Request a new download URL from the backend
-        console.log("Requesting fresh download URL from backend...");
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOWNLOAD}/${file.id || file._id || file.filename}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to get download URL: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        downloadUrl = data.downloadUrl || data.url || data.signedUrl;
-        console.log("Received fresh download URL:", downloadUrl);
-      }
+      // Use the downloadUrl directly from the file object (like the original working code)
+      const downloadUrl = file.downloadUrl || file.url;
       
       if (!downloadUrl) {
         throw new Error("No download URL available for this file.");
       }
       
-      // Download the file using the pre-signed URL
-      const response = await fetch(downloadUrl, {
-        method: 'GET',
-        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
-      });
-      
-      if (!response.ok) {
-        let errorMsg = `Failed to download: ${response.status} ${response.statusText}`;
-        
-        if (response.status === 403) {
-          errorMsg = "Download link has expired or is invalid. Please request a new code.";
-        } else if (response.status === 404) {
-          errorMsg = "File not found. It may have been deleted or expired.";
-        } else if (response.status === 410) {
-          errorMsg = "Download link has expired. Please request a new code.";
-        }
-        
-        throw new Error(errorMsg);
-      }
-
-      // Create blob and download
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Create a simple download link (like the original working code)
       const link = document.createElement('a');
-      link.href = url;
+      link.href = downloadUrl;
       link.download = file.filename || file.name || 'download';
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
       
       console.log("Download completed:", file.filename);
     } catch (err) {
@@ -173,26 +85,13 @@ const DownloadForm = () => {
       // If there's a main download URL, use it to download all files at once
       if (downloadURL) {
         console.log("Downloading all files using main download URL:", downloadURL);
-        const response = await fetch(downloadURL, {
-          method: 'GET',
-          signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to download all files: ${response.status} ${response.statusText}`);
-        }
-        
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = url;
-        link.download = `dropit-files-${code}.zip`; // Assume it's a zip file
+        link.href = downloadURL;
+        link.download = `dropit-files-${code}.zip`;
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
         console.log("All files downloaded successfully");
       } else {
         // Fallback: Download files individually
@@ -234,20 +133,6 @@ const DownloadForm = () => {
         }}>
           Enter your download code to access your files
         </p>
-        {backendStatus && (
-          <div style={{ 
-            marginTop: "16px",
-            padding: "8px 16px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: "500",
-            backgroundColor: backendStatus.success ? "#d4edda" : "#f8d7da",
-            color: backendStatus.success ? "#155724" : "#721c24",
-            border: `1px solid ${backendStatus.success ? "#c3e6cb" : "#f5c6cb"}`
-          }}>
-            Backend Status: {backendStatus.success ? "Connected" : `Disconnected - ${backendStatus.error}`}
-          </div>
-        )}
       </div>
 
       <form onSubmit={handleDownload} style={{ marginBottom: "40px" }}>
