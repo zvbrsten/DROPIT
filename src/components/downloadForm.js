@@ -8,6 +8,7 @@ const DownloadForm = () => {
   const [files, setFiles] = useState([]);
   const [filesCount, setFilesCount] = useState(0);
   const [totalSize, setTotalSize] = useState(0);
+  const [downloadURL, setDownloadURL] = useState("");
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -60,6 +61,7 @@ const DownloadForm = () => {
       setFiles(res.data.files);
       setFilesCount(res.data.filesCount);
       setTotalSize(res.data.totalSize);
+      setDownloadURL(res.data.downloadURL || "");
     } catch (err) {
       let errorMessage = "An error occurred while fetching files";
       
@@ -88,52 +90,60 @@ const DownloadForm = () => {
 
   const downloadFile = async (file) => {
     try {
-      // Use file.id if available, otherwise use filename or other identifier
-      const fileId = file.id || file._id || file.filename || file.name;
-      console.log("Downloading file:", file.filename, "ID:", fileId);
+      console.log("Downloading file:", file.filename);
+      console.log("File object:", file);
       
-      if (!fileId) {
-        throw new Error("File identifier not found. Cannot download file.");
-      }
+      // For AWS S3 pre-signed URLs, we need to get a fresh download URL for this specific file
+      // The backend should provide individual download URLs for each file
+      let downloadUrl;
       
-      // Try different download approaches
-      let response;
-      let downloadUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOWNLOAD}/${fileId}`;
-      
-      // First try: Use the file ID in the download endpoint
-      try {
-        response = await fetch(downloadUrl, {
+      // Check if the file has its own download URL
+      if (file.downloadUrl || file.url || file.signedUrl) {
+        downloadUrl = file.downloadUrl || file.url || file.signedUrl;
+        console.log("Using file-specific download URL:", downloadUrl);
+      } else if (downloadURL) {
+        // If there's a general download URL, we might need to append the file identifier
+        downloadUrl = downloadURL;
+        console.log("Using general download URL:", downloadUrl);
+      } else {
+        // Fallback: Request a new download URL from the backend
+        console.log("Requesting fresh download URL from backend...");
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOWNLOAD}/${file.id || file._id || file.filename}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
           signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
         });
-      } catch (firstError) {
-        console.log("First download attempt failed:", firstError);
         
-        // Second try: Use the file URL directly if available
-        if (file.downloadUrl || file.url) {
-          console.log("Trying direct file URL:", file.downloadUrl || file.url);
-          response = await fetch(file.downloadUrl || file.url, {
-            method: 'GET',
-            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
-          });
-        } else {
-          throw firstError;
+        if (!response.ok) {
+          throw new Error(`Failed to get download URL: ${response.status} ${response.statusText}`);
         }
+        
+        const data = await response.json();
+        downloadUrl = data.downloadUrl || data.url || data.signedUrl;
+        console.log("Received fresh download URL:", downloadUrl);
       }
       
+      if (!downloadUrl) {
+        throw new Error("No download URL available for this file.");
+      }
+      
+      // Download the file using the pre-signed URL
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+      });
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
         let errorMsg = `Failed to download: ${response.status} ${response.statusText}`;
         
-        if (response.status === 404) {
+        if (response.status === 403) {
+          errorMsg = "Download link has expired or is invalid. Please request a new code.";
+        } else if (response.status === 404) {
           errorMsg = "File not found. It may have been deleted or expired.";
         } else if (response.status === 410) {
           errorMsg = "Download link has expired. Please request a new code.";
-        } else if (errorData.error) {
-          errorMsg = errorData.error;
         }
         
         throw new Error(errorMsg);
@@ -144,7 +154,7 @@ const DownloadForm = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = file.filename;
+      link.download = file.filename || file.name || 'download';
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
@@ -154,20 +164,53 @@ const DownloadForm = () => {
       console.log("Download completed:", file.filename);
     } catch (err) {
       console.error("Download failed:", err);
-      alert(`Failed to download ${file.filename}: ${err.message}`);
+      alert(`Failed to download ${file.filename || 'file'}: ${err.message}`);
     }
   };
 
   const downloadAllFiles = async () => {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      console.log(`Downloading file ${i + 1}/${files.length}: ${file.filename}`);
-      await downloadFile(file);
-      
-      // Add a small delay between downloads to avoid overwhelming the browser
-      if (i < files.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // If there's a main download URL, use it to download all files at once
+      if (downloadURL) {
+        console.log("Downloading all files using main download URL:", downloadURL);
+        const response = await fetch(downloadURL, {
+          method: 'GET',
+          signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to download all files: ${response.status} ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `dropit-files-${code}.zip`; // Assume it's a zip file
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        console.log("All files downloaded successfully");
+      } else {
+        // Fallback: Download files individually
+        console.log("No main download URL, downloading files individually...");
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          console.log(`Downloading file ${i + 1}/${files.length}: ${file.filename}`);
+          await downloadFile(file);
+          
+          // Add a small delay between downloads to avoid overwhelming the browser
+          if (i < files.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
       }
+    } catch (err) {
+      console.error("Download all failed:", err);
+      alert(`Failed to download all files: ${err.message}`);
     }
   };
 
