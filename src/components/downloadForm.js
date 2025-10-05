@@ -1,17 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://dropit-backend-three.vercel.app";
-
-const formatFileSize = (bytes) => {
-  if (!bytes) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-export default function DownloadForm() {
+const DownloadForm = () => {
   const [code, setCode] = useState("");
   const [files, setFiles] = useState([]);
   const [filesCount, setFilesCount] = useState(0);
@@ -19,6 +9,14 @@ export default function DownloadForm() {
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const handleDownload = async (e) => {
     e.preventDefault();
@@ -30,7 +28,7 @@ export default function DownloadForm() {
     setProgress(0);
 
     try {
-      const res = await axios.get(`${BACKEND}/api/file/${encodeURIComponent(code)}`, {
+      const res = await axios.get(`http://localhost:8000/api/file/${code}`, {
         onDownloadProgress: (progressEvent) => {
           const { loaded, total } = progressEvent;
           if (total) {
@@ -39,10 +37,11 @@ export default function DownloadForm() {
           }
         },
       });
-
-      setFiles(res.data.files || []);
-      setFilesCount(res.data.filesCount || (res.data.files || []).length);
-      setTotalSize(res.data.totalSize || 0);
+      
+      console.log("📥 Download response:", res.data);
+      setFiles(res.data.files);
+      setFilesCount(res.data.filesCount);
+      setTotalSize(res.data.totalSize);
     } catch (err) {
       const errorMessage = err.response?.data?.error || "An error occurred while fetching files";
       setError(errorMessage);
@@ -54,12 +53,22 @@ export default function DownloadForm() {
 
   const downloadFile = async (file) => {
     try {
-      const response = await fetch(file.downloadUrl);
-
+      console.log("🔗 Downloading file:", file.filename, "ID:", file.id);
+      
+      // Download through backend to avoid CORS issues
+      const response = await fetch(`https://dropit-backend-three.vercel.app"/api/download/${file.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (!response.ok) {
-        throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to download: ${response.status} ${response.statusText}`);
       }
 
+      // Create blob and download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -70,6 +79,8 @@ export default function DownloadForm() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      console.log("✅ Download completed:", file.filename);
     } catch (err) {
       console.error("Download failed:", err);
       alert(`Failed to download ${file.filename}: ${err.message}`);
@@ -79,91 +90,318 @@ export default function DownloadForm() {
   const downloadAllFiles = async () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      console.log(`⬇️ Downloading file ${i + 1}/${files.length}: ${file.filename}`);
       await downloadFile(file);
-      if (i < files.length - 1) await new Promise(resolve => setTimeout(resolve, 700));
+      
+      // Add a small delay between downloads to avoid overwhelming the browser
+      if (i < files.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
   };
 
   return (
-    <div style={{
-      backgroundColor: "#1e1e1e",
-      padding: "20px",
-      borderRadius: "10px",
-      maxWidth: "600px",
-      margin: "auto",
-      color: "#fff",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
-    }}>
-      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "15px", textAlign: "center" }}>
-        Retrieve Files
-      </h2>
-      <form onSubmit={handleDownload}>
-        <input
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          type="text"
-          placeholder="Enter download code"
-          required
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            background: 'rgba(255,255,255,0.02)',
-            color: '#e6eef8',
-            fontSize: '15px',
-            outline: 'none',
-            boxSizing: 'border-box'
-          }}
-        />
-        <button type="submit" disabled={isLoading} style={{
-          width: "100%",
-          padding: "12px 16px",
-          borderRadius: "10px",
-          border: "none",
-          fontWeight: 700,
-          fontSize: "15px",
-          cursor: "pointer",
-          marginTop: "10px",
-          background: isLoading ? "#555" : "#007bff",
-          color: "white"
+    <div style={{ maxWidth: "700px", margin: "0 auto", padding: "40px 20px" }}>
+      <div style={{ textAlign: "center", marginBottom: "40px" }}>
+        <h1 style={{ 
+          fontSize: "32px", 
+          fontWeight: "300", 
+          color: "#2c3e50", 
+          margin: "0 0 8px 0",
+          letterSpacing: "-0.5px"
         }}>
-          {isLoading ? 'Fetching Files...' : 'Get Files'}
-        </button>
+          Download Files
+        </h1>
+        <p style={{ 
+          color: "#7f8c8d", 
+          fontSize: "16px", 
+          margin: "0",
+          fontWeight: "300"
+        }}>
+          Enter your download code to access your files
+        </p>
+      </div>
+
+      <form onSubmit={handleDownload} style={{ marginBottom: "40px" }}>
+        <div style={{ 
+          display: "flex", 
+          gap: "12px", 
+          maxWidth: "500px", 
+          margin: "0 auto" 
+        }}>
+          <input
+            type="text"
+            placeholder="Enter download code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            style={{ 
+              flex: 1,
+              padding: "16px 20px", 
+              fontSize: "16px", 
+              border: "none", 
+              borderRadius: "12px",
+              backgroundColor: "#f8f9fa",
+              color: "#2c3e50",
+              outline: "none",
+              transition: "all 0.2s ease",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            }}
+            onFocus={(e) => {
+              e.target.style.backgroundColor = "#ffffff";
+              e.target.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
+            }}
+            onBlur={(e) => {
+              e.target.style.backgroundColor = "#f8f9fa";
+              e.target.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+            }}
+          />
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            style={{ 
+              padding: "16px 32px", 
+              backgroundColor: isLoading ? "#bdc3c7" : "#3498db", 
+              color: "white", 
+              border: "none", 
+              borderRadius: "12px", 
+              cursor: isLoading ? "not-allowed" : "pointer",
+              fontSize: "16px",
+              fontWeight: "500",
+              transition: "all 0.2s ease",
+              boxShadow: isLoading ? "none" : "0 4px 16px rgba(52, 152, 219, 0.3)",
+              minWidth: "140px"
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.target.style.transform = "translateY(-1px)";
+                e.target.style.boxShadow = "0 6px 20px rgba(52, 152, 219, 0.4)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 16px rgba(52, 152, 219, 0.3)";
+              }
+            }}
+          >
+            {isLoading ? "Loading..." : "Get Files"}
+          </button>
+        </div>
       </form>
 
       {isLoading && progress > 0 && (
-        <div style={{ marginTop: '12px' }}>
-          <div style={{ marginTop: '12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress}%`, transition: 'width 0.4s ease', background: 'linear-gradient(90deg,#27d39a,#06b6d4)' }} />
+        <div style={{ 
+          maxWidth: "500px", 
+          margin: "0 auto 40px auto",
+          padding: "0 20px"
+        }}>
+          <div style={{ 
+            width: "100%", 
+            height: "6px", 
+            backgroundColor: "#ecf0f1", 
+            borderRadius: "3px", 
+            overflow: "hidden",
+            marginBottom: "8px"
+          }}>
+            <div
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, #3498db, #2980b9)",
+                borderRadius: "3px",
+                transition: "width 0.3s ease",
+                boxShadow: "0 0 10px rgba(52, 152, 219, 0.3)"
+              }}
+            ></div>
           </div>
-          <p style={{ textAlign: 'right', fontSize: '12px', color: '#9fb3cf', marginTop: '6px' }}>{progress}%</p>
+          <p style={{ 
+            fontSize: "14px", 
+            textAlign: "center", 
+            color: "#7f8c8d",
+            margin: "0",
+            fontWeight: "500"
+          }}>
+            {progress}% complete
+          </p>
         </div>
       )}
 
       {error && (
-        <div style={{ marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'rgba(128,0,0,0.18)', border: '1px solid rgba(255,100,100,0.08)', color: '#ffdada' }}>
-          <strong>Error:</strong> {error}
+        <div style={{ 
+          maxWidth: "500px",
+          margin: "0 auto 40px auto",
+          padding: "20px", 
+          backgroundColor: "#fff5f5", 
+          color: "#e74c3c", 
+          borderRadius: "12px",
+          textAlign: "center"
+        }}>
+          <div style={{ fontWeight: "500", marginBottom: "8px" }}>Download Error</div>
+          <div style={{ fontSize: "14px", opacity: "0.8" }}>{error}</div>
+          {error.includes("expired") && (
+            <div style={{ 
+              marginTop: "12px", 
+              fontSize: "13px", 
+              opacity: "0.7",
+              fontStyle: "italic"
+            }}>
+              Try fetching the files again
+            </div>
+          )}
         </div>
       )}
 
       {files.length > 0 && (
-        <div style={{ marginTop: '18px' }}>
-          <h2 style={{ margin: 0, fontSize: '16px', color: '#ecf6ff' }}>Found {filesCount} File{filesCount !== 1 ? 's' : ''}</h2>
-          <p style={{ margin: '6px 0 0 0', color: '#9fb3cf', fontSize: '13px' }}>Total Size: {formatFileSize(totalSize)}</p>
-          <div style={{ marginTop: '12px' }}>
-            {files.map((file, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginTop: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#ecf6ff' }}>{file.filename}</div>
-                  <div style={{ fontSize: '13px', color: '#9fb3cf' }}>{formatFileSize(file.fileSize)} • {file.mimeType}</div>
+        <div style={{ 
+          maxWidth: "600px", 
+          margin: "0 auto"
+        }}>
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center", 
+            marginBottom: "24px",
+            padding: "0 20px"
+          }}>
+            <div>
+              <h2 style={{ 
+                fontSize: "24px", 
+                fontWeight: "300", 
+                color: "#2c3e50", 
+                margin: "0 0 4px 0"
+              }}>
+                {filesCount} File{filesCount !== 1 ? 's' : ''} Ready
+              </h2>
+              <p style={{ 
+                color: "#7f8c8d", 
+                margin: "0", 
+                fontSize: "14px",
+                fontWeight: "300"
+              }}>
+                Total size: {formatFileSize(totalSize)}
+              </p>
+            </div>
+            {files.length > 1 && (
+              <button
+                onClick={downloadAllFiles}
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: "#27ae60",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 4px 16px rgba(39, 174, 96, 0.3)"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = "translateY(-1px)";
+                  e.target.style.boxShadow = "0 6px 20px rgba(39, 174, 96, 0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "0 4px 16px rgba(39, 174, 96, 0.3)";
+                }}
+              >
+                Download All
+              </button>
+            )}
+          </div>
+
+          <div style={{ 
+            display: "grid", 
+            gap: "12px",
+            padding: "0 20px"
+          }}>
+            {files.map((file, index) => (
+              <div 
+                key={index} 
+                style={{ 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center",
+                  padding: "20px", 
+                  backgroundColor: "#ffffff", 
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = "translateY(-2px)";
+                  e.target.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "0 2px 12px rgba(0,0,0,0.04)";
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    fontWeight: "500", 
+                    marginBottom: "6px", 
+                    color: "#2c3e50",
+                    fontSize: "16px"
+                  }}>
+                    {file.filename}
+                  </div>
+                  <div style={{ 
+                    fontSize: "13px", 
+                    color: "#95a5a6",
+                    fontWeight: "300"
+                  }}>
+                    {formatFileSize(file.fileSize)} • {file.mimeType}
+                  </div>
                 </div>
-                <button onClick={() => downloadFile(file)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer' }}>Download</button>
+                <button
+                  onClick={() => downloadFile(file)}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#3498db",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 2px 8px rgba(52, 152, 219, 0.3)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#2980b9";
+                    e.target.style.transform = "translateY(-1px)";
+                    e.target.style.boxShadow = "0 4px 12px rgba(52, 152, 219, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#3498db";
+                    e.target.style.transform = "translateY(0)";
+                    e.target.style.boxShadow = "0 2px 8px rgba(52, 152, 219, 0.3)";
+                  }}
+                >
+                  Download
+                </button>
               </div>
             ))}
+          </div>
+
+          <div style={{ 
+            marginTop: "32px", 
+            padding: "16px 20px", 
+            backgroundColor: "#f8f9fa", 
+            color: "#6c757d", 
+            borderRadius: "10px",
+            fontSize: "13px",
+            textAlign: "center",
+            fontWeight: "300"
+          }}>
+            Download links are generated fresh each time you fetch files
           </div>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default DownloadForm;
