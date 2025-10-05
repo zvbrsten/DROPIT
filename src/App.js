@@ -1,81 +1,128 @@
 import React, { useState } from "react";
+
 import UploadForm from "./components/uploadForm";
 import DownloadForm from "./components/downloadForm";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState("upload"); // "upload", "download", "groups"
 
   const tabStyle = (tabName) => ({
-    flex: 1,
-    padding: "12px 20px",
-    backgroundColor: activeTab === tabName ? "#007bff" : "#2d2d2d",
-    color: activeTab === tabName ? "#fff" : "#ccc",
+    padding: "16px 32px",
+    backgroundColor: activeTab === tabName ? "#3498db" : "transparent",
+    color: activeTab === tabName ? "white" : "#7f8c8d",
     border: "none",
-    borderBottom: activeTab === tabName ? "3px solid #007bff" : "3px solid transparent",
     cursor: "pointer",
-    fontWeight: activeTab === tabName ? "bold" : "normal",
-    transition: "background-color 0.2s, color 0.2s",
+    borderRadius: "12px 12px 0 0",
+    fontSize: "16px",
+    fontWeight: "500",
+    transition: "all 0.2s ease",
+    position: "relative"
   });
 
   return (
     <div style={{ 
-      padding: "20px", 
-      maxWidth: "900px", 
-      margin: "0 auto", 
-      color: "#fff", 
-      fontFamily: "sans-serif", 
-      background: "linear-gradient(270deg, #1e1e1e, #2d2d2d)", 
-      backgroundSize: "400% 400%", 
-      animation: "gradient 15s ease infinite" 
+      minHeight: "100vh", 
+      backgroundColor: "#f8f9fa",
+      padding: "0"
     }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "30px" }}>
-        <h1 style={{ color: "#fff", marginBottom: "10px" }}>DropIt</h1>
-        <p style={{ color: "#aaa", fontSize: "16px" }}>
-          Share files easily with temporary codes or collaborate in groups
-        </p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div style={{
-        display: "flex",
-        marginBottom: "20px",
-        backgroundColor: "#1e1e1e",
-        borderRadius: "8px 8px 0 0",
-        overflow: "hidden",
+      <div style={{ 
+        backgroundColor: "#ffffff",
+        boxShadow: "0 2px 20px rgba(0,0,0,0.08)",
+        marginBottom: "40px"
       }}>
-        <button style={tabStyle("upload")} onClick={() => setActiveTab("upload")}>
-          Upload Files
-        </button>
-        <button style={tabStyle("download")} onClick={() => setActiveTab("download")}>
-          Download Files
-        </button>
+        <div style={{ 
+          maxWidth: "1200px", 
+          margin: "0 auto", 
+          padding: "40px 20px 20px 20px"
+        }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <h1 style={{ 
+              fontSize: "48px", 
+              fontWeight: "300", 
+              color: "#2c3e50", 
+              margin: "0 0 12px 0",
+              letterSpacing: "-1px"
+            }}>
+              DropIt
+            </h1>
+            <p style={{ 
+              color: "#7f8c8d", 
+              fontSize: "18px", 
+              margin: "0",
+              fontWeight: "300"
+            }}>
+              Share files easily with temporary codes
+            </p>
+          </div>
+
+          {/* Tab Navigation */}
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "center",
+            gap: "8px",
+            marginBottom: "0"
+          }}>
+            <button
+              style={tabStyle("upload")}
+              onClick={() => setActiveTab("upload")}
+              onMouseEnter={(e) => {
+                if (activeTab !== "upload") {
+                  e.target.style.color = "#3498db";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== "upload") {
+                  e.target.style.color = "#7f8c8d";
+                }
+              }}
+            >
+              Upload Files
+            </button>
+            <button
+              style={tabStyle("download")}
+              onClick={() => setActiveTab("download")}
+              onMouseEnter={(e) => {
+                if (activeTab !== "download") {
+                  e.target.style.color = "#3498db";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== "download") {
+                  e.target.style.color = "#7f8c8d";
+                }
+              }}
+            >
+              Download Files
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Tab Content */}
-      <div style={{
-        backgroundColor: "#1e1e1e",
-        padding: "20px",
-        borderRadius: "0 0 8px 8px",
-        minHeight: "400px",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+      <div style={{ 
+        maxWidth: "1200px", 
+        margin: "0 auto",
+        padding: "0 20px 40px 20px"
       }}>
         {activeTab === "upload" && <UploadForm />}
         {activeTab === "download" && <DownloadForm />}
       </div>
 
       {/* Footer */}
-      <div style={{
-        textAlign: "center",
-        marginTop: "30px",
-        padding: "20px",
-        color: "#aaa",
+      <div style={{ 
+        textAlign: "center", 
+        padding: "40px 20px", 
+        color: "#95a5a6", 
         fontSize: "14px",
-        borderTop: "1px solid #333",
+        backgroundColor: "#ffffff",
+        marginTop: "60px"
       }}>
-        <p>
-          <strong>Individual Sharing:</strong> Upload multiple files and get a single code for easy sharing<br />
-          <strong>Group Sharing:</strong> Create or join groups for collaborative file sharing
+        <p style={{ 
+          margin: "0",
+          fontWeight: "300",
+          lineHeight: "1.6"
+        }}>
+          Upload multiple files and get a single code for easy sharing
         </p>
       </div>
     </div>
