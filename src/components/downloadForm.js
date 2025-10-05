@@ -52,6 +52,11 @@ const DownloadForm = () => {
       });
       
       console.log("Download response:", res.data);
+      console.log("Files structure:", res.data.files);
+      if (res.data.files && res.data.files.length > 0) {
+        console.log("First file object:", res.data.files[0]);
+        console.log("Available fields:", Object.keys(res.data.files[0]));
+      }
       setFiles(res.data.files);
       setFilesCount(res.data.filesCount);
       setTotalSize(res.data.totalSize);
@@ -83,16 +88,41 @@ const DownloadForm = () => {
 
   const downloadFile = async (file) => {
     try {
-      console.log("Downloading file:", file.filename, "ID:", file.id);
+      // Use file.id if available, otherwise use filename or other identifier
+      const fileId = file.id || file._id || file.filename || file.name;
+      console.log("Downloading file:", file.filename, "ID:", fileId);
       
-      // Download through backend to avoid CORS issues
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOWNLOAD}/${file.id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
-      });
+      if (!fileId) {
+        throw new Error("File identifier not found. Cannot download file.");
+      }
+      
+      // Try different download approaches
+      let response;
+      let downloadUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOWNLOAD}/${fileId}`;
+      
+      // First try: Use the file ID in the download endpoint
+      try {
+        response = await fetch(downloadUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+        });
+      } catch (firstError) {
+        console.log("First download attempt failed:", firstError);
+        
+        // Second try: Use the file URL directly if available
+        if (file.downloadUrl || file.url) {
+          console.log("Trying direct file URL:", file.downloadUrl || file.url);
+          response = await fetch(file.downloadUrl || file.url, {
+            method: 'GET',
+            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
+          });
+        } else {
+          throw firstError;
+        }
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
