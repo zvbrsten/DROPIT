@@ -40,7 +40,7 @@ const UploadForm = () => {
       setIsUploading(true);
       setProgress(0);
       
-      const res = await axios.post("http://localhost:8000/api/upload", formData, {
+      const res = await axios.post("https://dropit-backend-three.vercel.app"/api/upload", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -385,3 +385,4 @@ const UploadForm = () => {
 };
 
 export default UploadForm;
+
