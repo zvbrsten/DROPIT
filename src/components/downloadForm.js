@@ -38,12 +38,23 @@ const DownloadForm = () => {
         },
       });
       
-      console.log("📥 Download response:", res.data);
+      console.log("Download response:", res.data);
       setFiles(res.data.files);
       setFilesCount(res.data.filesCount);
       setTotalSize(res.data.totalSize);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || "An error occurred while fetching files";
+      let errorMessage = "An error occurred while fetching files";
+      
+      if (err.response?.status === 404) {
+        errorMessage = "Download code not found. Please check the code and try again.";
+      } else if (err.response?.status === 410) {
+        errorMessage = "Download link has expired. Please request a new code.";
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
       console.error("Download error:", err);
     } finally {
@@ -53,7 +64,7 @@ const DownloadForm = () => {
 
   const downloadFile = async (file) => {
     try {
-      console.log("🔗 Downloading file:", file.filename, "ID:", file.id);
+      console.log("Downloading file:", file.filename, "ID:", file.id);
       
       // Download through backend to avoid CORS issues
       const response = await fetch(`https://dropit-backend-three.vercel.app/api/download/${file.id}`, {
@@ -65,7 +76,17 @@ const DownloadForm = () => {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to download: ${response.status} ${response.statusText}`);
+        let errorMsg = `Failed to download: ${response.status} ${response.statusText}`;
+        
+        if (response.status === 404) {
+          errorMsg = "File not found. It may have been deleted or expired.";
+        } else if (response.status === 410) {
+          errorMsg = "Download link has expired. Please request a new code.";
+        } else if (errorData.error) {
+          errorMsg = errorData.error;
+        }
+        
+        throw new Error(errorMsg);
       }
 
       // Create blob and download
@@ -80,7 +101,7 @@ const DownloadForm = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      console.log("✅ Download completed:", file.filename);
+      console.log("Download completed:", file.filename);
     } catch (err) {
       console.error("Download failed:", err);
       alert(`Failed to download ${file.filename}: ${err.message}`);
@@ -90,7 +111,7 @@ const DownloadForm = () => {
   const downloadAllFiles = async () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      console.log(`⬇️ Downloading file ${i + 1}/${files.length}: ${file.filename}`);
+      console.log(`Downloading file ${i + 1}/${files.length}: ${file.filename}`);
       await downloadFile(file);
       
       // Add a small delay between downloads to avoid overwhelming the browser
