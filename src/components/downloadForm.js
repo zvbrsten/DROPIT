@@ -56,7 +56,7 @@ const DownloadForm = () => {
       console.log("🔗 Downloading file:", file.filename, "ID:", file.id);
       
       // Download through backend to avoid CORS issues
-      const response = await fetch(`https://dropit-backend-three.vercel.app"/api/download/${file.id}`, {
+      const response = await fetch(`https://dropit-backend-three.vercel.app/api/download/${file.id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -405,4 +405,5 @@ const DownloadForm = () => {
 };
 
 export default DownloadForm;
+
 
